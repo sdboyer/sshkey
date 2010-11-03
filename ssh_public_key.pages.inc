@@ -9,13 +9,15 @@ function ssh_public_key_list_page($entity_type, $entity_id) {
   $destination = drupal_get_destination();
 
   // Add the local actions.
-  $local_actions['add'] = array(
-    'title' => t('Add a public key'),
-    'href' => "ssh-keys/{$entity_type}/{$entity_id}/add",
-    'query' => $destination,
-    'modal' => TRUE,
-  );
-  $build['actions'] = theme('links', $local_actions, array('class' => 'item-list action-links'));
+  if (ssh_public_key_access('create', $entity_type, $entity_id)) {
+    $local_actions['add'] = array(
+      'title' => t('Add a public key'),
+      'href' => "ssh-keys/{$entity_type}/{$entity_id}/add",
+      'query' => $destination,
+      'modal' => TRUE,
+    );
+    $build['actions'] = theme('links', $local_actions, array('class' => 'item-list action-links'));
+  }
 
   $header = array(
     'name' => array('data' => t('Title'), 'field' => 'title', 'sort' => 'asc'),
@@ -37,26 +39,34 @@ function ssh_public_key_list_page($entity_type, $entity_id) {
     $rows[$key_id]['fingerprint'] = $key->fingerprint;
 
     $operations = array();
-    $operations['edit'] = array(
-      'title' => t('Edit'),
-      'href' => "ssh-keys/{$entity_type}/{$entity_id}/edit/{$key_id}",
-      'query' => $destination,
-      'modal' => TRUE,
-    );
-    $operations['delete'] = array(
-      'title' => t('Delete'),
-      'href' => "ssh-keys/{$entity_type}/{$entity_id}/delete/{$key_id}",
-      'query' => $destination,
-      'modal' => TRUE,
-    );
+    if (ssh_public_key_access('edit', $entity_type, $entity_id, $key)) {
+      $operations['edit'] = array(
+        'title' => t('Edit'),
+        'href' => "ssh-keys/{$entity_type}/{$entity_id}/edit/{$key_id}",
+        'query' => $destination,
+        'modal' => TRUE,
+      );
+    }
+    if (ssh_public_key_access('delete', $entity_type, $entity_id, $key)) {
+      $operations['delete'] = array(
+        'title' => t('Delete'),
+        'href' => "ssh-keys/{$entity_type}/{$entity_id}/delete/{$key_id}",
+        'query' => $destination,
+        'modal' => TRUE,
+      );
+    }
     $rows[$key_id]['operations'] = array(
       'data' => theme('links', $operations, array('class' => 'links inline')),
     );
   }
 
   if (empty($rows)) {
+    $empty_text[] = t('No SSH public keys available.');
+    if (ssh_public_key_access('create', $entity_type, $entity_id)) {
+      $empty_text[] = l(t('Add a public key'), "ssh-keys/{$entity_type}/{$entity_id}/add", array('query' => $destination, 'modal' => TRUE));
+    }
     $rows['add'] = array(array(
-      'data' => t('No SSH public keys available.') . ' ' . l(t('Add a public key'), "ssh-keys/{$entity_type}/{$entity_id}/add", array('query' => $destination, 'modal' => TRUE)),
+      'data' => implode(' ', $empty_text),
       'colspan' => count($header),
       'class' => 'empty add',
     ));
