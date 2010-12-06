@@ -3,8 +3,8 @@
 /**
  * Implements hook_schema().
  */
-function ssh_public_key_schema() {
-  $schema['ssh_public_key'] = array(
+function sshkey_schema() {
+  $schema['sshkey'] = array(
     'description' => 'Stores SSH public keys associated with entities.',
     'fields' => array(
       'key_id' => array(
@@ -67,13 +67,16 @@ function ssh_public_key_schema() {
 /**
  * Implements hook_install().
  */
-function ssh_public_key_install() {
-  drupal_install_schema('ssh_public_key');
+function sshkey_install() {
+  drupal_install_schema('sshkey');
 }
 
 /**
  * Impelements hook_uninstall().
  */
-function ssh_public_key_uninstall() {
-  drupal_uninstall_schema('ssh_public_key');
+function sshkey_uninstall() {
+  drupal_uninstall_schema('sshkey');
+
+  // Remove variables.
+  variable_del('sshkey_help');
 }
