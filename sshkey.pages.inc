@@ -11,7 +11,11 @@ function sshkey_list_page($entity_type, $entity_id) {
       'query' => $destination,
       'modal' => TRUE,
     );
-    $build['actions'] = theme('links', $local_actions, array('class' => 'item-list action-links'));
+    $build['actions'] = array(
+      '#theme' => 'links',
+      '#links' => $local_actions,
+      '#attributes' => array('class' => 'item-list action-links'),
+    );
   }
 
   $header = array(
@@ -20,9 +24,13 @@ function sshkey_list_page($entity_type, $entity_id) {
     'operations' => array('data' => t('Operations')),
   );
 
-  $limit = 25;
-  $query = pager_query("SELECT key_id FROM {sshkey} WHERE entity_type = '%s' AND entity_id = %d" . tablesort_sql($header), $limit, 0, NULL, $entity_type, $entity_id);
-  $key_ids = sshkey_db_fetch_col($query);
+  $query = db_select('sshkey')->extend('PagerDefault')->extend('TableSort');
+  $query->addField('sshkey', 'key_id');
+  $query->condition('entity_type', $entity_type);
+  $query->condition('entity_id', $entity_id);
+  $query->orderByHeader($header);
+  $query->limit(25);
+  $key_ids = $query->execute()->fetchCol();
   $keys = sshkey_load_multiple($key_ids);
 
   $rows = array();
@@ -51,34 +59,37 @@ function sshkey_list_page($entity_type, $entity_id) {
       );
     }
     $rows[$key_id]['operations'] = array(
-      'data' => theme('links', $operations, array('class' => 'links inline')),
+      'data' => array(
+        '#theme' => 'links',
+        '#links' => $operations,
+        '#attributes' => array('class' => array('links', 'inline', 'nowrap')),
+      ),
     );
   }
 
-  if (empty($rows)) {
-    $empty_text[] = t('No SSH public keys available.');
-    if (sshkey_access('create', $entity_type, $entity_id)) {
-      $empty_text[] = l(t('Add a public key'), "ssh-keys/{$entity_type}/{$entity_id}/add", array('query' => $destination, 'modal' => TRUE));
-    }
-    $rows['add'] = array(array(
-      'data' => implode(' ', $empty_text),
-      'colspan' => count($header),
-      'class' => 'empty add',
-    ));
+  $empty_text[] = t('No SSH public keys available.');
+  if (sshkey_access('create', $entity_type, $entity_id)) {
+    $empty_text[] = l(t('Add a public key'), "ssh-keys/{$entity_type}/{$entity_id}/add", array('query' => $destination, 'modal' => TRUE));
   }
 
-  $build['keys_table'] = theme('table', $header, $rows);
-  $build['keys_table_pager'] = theme('pager', NULL, $limit, 0);
+  $build['keys_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => implode(' ', $empty_text),
+  );
+  $build['keys_table_pager'] = array('#theme' => 'pager');
 
   //$build['pre_form_title'] = '<div><hr /><h3>Add a public key</h3>';
   //$build['add_form'] = drupal_get_form('sshkey_edit_form', $entity_type, $entity_id);
   //$build['post_add_form'] = '</div>';
 
-  return implode('', $build);
+  return $build;
 }
 
-function sshkey_edit_form($form_state, $entity_type, $entity_id, $key = NULL) {
-  $entity = sshkey_entity_object_load($entity_type, $entity_id);
+function sshkey_edit_form($form, $form_state, $entity_type, $entity_id, $key = NULL) {
+  $entity = entity_load($entity_type, array($entity_id));
+  $entity = reset($entity);
 
   if (!isset($key)) {
     $key = new stdClass();
@@ -97,10 +108,6 @@ function sshkey_edit_form($form_state, $entity_type, $entity_id, $key = NULL) {
   $form['key_id'] = array(
     '#type' => 'value',
     '#value' => isset($key->key_id) ? $key->key_id : NULL,
-  );
-  $form['old_fingerprint'] = array(
-    '#type' => 'value',
-    '#value' => $key->fingerprint,
   );
   $form['entity_type'] = array(
     '#type' => 'value',
@@ -163,12 +170,13 @@ function sshkey_edit_form_validate($form, &$form_state) {
 }
 
 function sshkey_edit_form_submit($form, &$form_state) {
+  form_state_values_clean($form_state);
   $key = (object) $form_state['values'];
   sshkey_save($key);
   drupal_set_message(t('The SSH public key %title has been saved.', array('%title' => $form_state['values']['title'])));
 }
 
-function sshkey_delete_form($form_state, $key) {
+function sshkey_delete_form($form, $form_state, $key) {
   $form['#sshkey'] = $key;
 
   $form['key_id'] = array(
