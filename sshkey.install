@@ -10,6 +10,8 @@ function sshkey_schema() {
       'key_id' => array(
         'description' => 'The account associated with the key.',
         'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
       'entity_type' => array(
         'description' => 'Primary key with entity_id; the type of entity (e.g. node, user, etc.).',

@@ -74,7 +74,7 @@ function sshkey_list_page($entity_type, $entity_id) {
   //$build['add_form'] = drupal_get_form('sshkey_edit_form', $entity_type, $entity_id);
   //$build['post_add_form'] = '</div>';
 
-  return implode('', $build);
+  return implode("\n", $build);
 }
 
 function sshkey_edit_form($form_state, $entity_type, $entity_id, $key = NULL) {
@@ -97,10 +97,6 @@ function sshkey_edit_form($form_state, $entity_type, $entity_id, $key = NULL) {
   $form['key_id'] = array(
     '#type' => 'value',
     '#value' => isset($key->key_id) ? $key->key_id : NULL,
-  );
-  $form['old_fingerprint'] = array(
-    '#type' => 'value',
-    '#value' => $key->fingerprint,
   );
   $form['entity_type'] = array(
     '#type' => 'value',
