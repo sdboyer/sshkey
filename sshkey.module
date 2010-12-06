@@ -153,7 +153,13 @@ function sshkey_access($op, $entity_type = NULL, $entity_id = NULL, $key = NULL,
     return $rights[$account->uid][$cid][$op];
   }
 
+  if (!sshkey_entity_object_load($entity_type, $entity_id)) {
+    $rights[$account->uid][$cid][$op] = FALSE;
+    return FALSE;
+  }
+
   if (user_access('administer SSH public keys', $account)) {
+    $rights[$account->uid][$cid][$op] = TRUE;
     return TRUE;
   }
 
@@ -408,7 +414,6 @@ function sshkey_invoke_hook(&$value, $hook, $a2 = NULL, $a3 = NULL) {
 function sshkey_extract_entity_id($entity_type, $entity) {
   $ids = array(
     'node' => 'nid',
-    'comment' => 'cid',
     'taxonomy_term', 'tid',
     'user' => 'uid',
   );
@@ -422,10 +427,13 @@ function sshkey_entity_object_load($entity_type, $entity_id) {
   static $entities = array();
 
   if (!isset($entities[$entity_type][$entity_id])) {
-    $entity = NULL;
+    $entity = FALSE;
     switch ($entity_type) {
       case 'node':
         $entity = node_load($entity_id);
+        break;
+      case 'taxonomy_term':
+        $entity = taxonomy_get_term($entity_id);
         break;
       case 'user':
         $entity = user_load(array('uid' => $entity_id));

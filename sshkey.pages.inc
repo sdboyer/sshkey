@@ -1,11 +1,6 @@
 <?php
 
 function sshkey_list_page($entity_type, $entity_id) {
-  // Validate there is an actual entity to associate with.
-  if (!sshkey_entity_object_load($entity_type, $entity_id)) {
-    return DRUPAL_NOT_FOUND;
-  }
-
   $destination = drupal_get_destination();
 
   // Add the local actions.
@@ -84,10 +79,6 @@ function sshkey_list_page($entity_type, $entity_id) {
 
 function sshkey_edit_form($form_state, $entity_type, $entity_id, $key = NULL) {
   $entity = sshkey_entity_object_load($entity_type, $entity_id);
-  // Validate there is an actual entity to associate with.
-  if (empty($entity)) {
-    return DRUPAL_NOT_FOUND;
-  }
 
   if (!isset($key)) {
     $key = new stdClass();
