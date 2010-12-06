@@ -168,7 +168,7 @@ function sshkey_edit_form_validate($form, &$form_state) {
   //  }
   //}
 
-  sshkey_validate($form_state['values'], $form);
+  sshkey_validate($form_state['values'], $form, $form_state);
 }
 
 function sshkey_edit_form_submit($form, &$form_state) {

@@ -1,6 +1,10 @@
 <?php
 
 /**
+ * Allows SSH keys to be associated with entities.
+ */
+
+/**
  * Modules should return this value from hook_sshkey_access() to allow access
  * to an SSH key.
  */
@@ -21,7 +25,7 @@ define('SSHKEY_ACCESS_IGNORE', NULL);
 /**
  * Exception thrown if a public key does not parse correctly.
  */
-class SSHPublicKeyParseException extends Exception { }
+class SSHKeyParseException extends Exception { }
 
 /**
  * Implements hook_help().
@@ -331,7 +335,7 @@ function sshkey_delete_all_by_entity($entity_type, $entity_id) {
 /**
  * Validate an SSH public key.
  */
-function sshkey_validate($key, $form) {
+function sshkey_validate($key, $form, &$form_state) {
   $key = (object) $key;
 
   try {
@@ -341,12 +345,12 @@ function sshkey_validate($key, $form) {
       form_set_error('value', t('The public key with fingerprint %fingerprint is already in use.', array('%fingerprint' => $parsed['fingerprint'])));
     }
   }
-  catch (SSHPublicKeyParseException $e) {
+  catch (SSHKeyParseException $e) {
     form_set_error('value', $e->getMessage());
   }
 
   // Allow other modules to validate the SSH public key.
-  sshkey_invoke_hook($key, 'validate', $form);
+  sshkey_invoke_hook($key, 'validate', $form, $form_state);
 }
 
 /**
@@ -361,18 +365,18 @@ function sshkey_parse($key_raw) {
   // The SSH key should be in the form
   $key_parts = explode(' ', $parsed['raw'], 3);
   if (count($key_parts) < 2) {
-    throw new SSHPublicKeyParseException(t('The key is invalid.'));
+    throw new SSHKeyParseException(t('The key is invalid.'));
   }
 
   $parsed['algorithm'] = $key_parts[0];
   if (!in_array($parsed['algorithm'], array('ssh-rsa', 'ssh-dss'))) {
-    throw new SSHPublicKeyParseException(t("The key is invalid. It must begin with <em>ssh-rsa</em> or <em>ssh-dss</em>."));
+    throw new SSHKeyParseException(t("The key is invalid. It must begin with <em>ssh-rsa</em> or <em>ssh-dss</em>."));
   }
 
   $parsed['key'] = $key_parts[1];
   $key_base64_decoded = base64_decode($parsed['key']);
   if ($key_base64_decoded === FALSE) {
-    throw new SSHPublicKeyParseException(t('The key could not be decoded.'));
+    throw new SSHKeyParseException(t('The key could not be decoded.'));
   }
   $parsed['fingerprint'] = md5($key_base64_decoded);
 
@@ -386,11 +390,11 @@ function sshkey_parse($key_raw) {
 /**
  * Invoke a hook_sshkey() operation in all modules.
  */
-function sshkey_invoke_hook(&$value, $hook, $a2 = NULL) {
+function sshkey_invoke_hook(&$value, $hook, $a2 = NULL, $a3 = NULL) {
   $return = array();
   foreach (module_implements('sshkey_' . $hook) as $name) {
     $function = $name . '_sshkey_' . $hook;
-    $result = $function($value, $a2);
+    $result = $function($value, $a2, $a3);
     if (isset($result) && is_array($result)) {
       $return = array_merge($return, $result);
     }
