@@ -140,13 +140,6 @@ function sshkey_menu() {
 }
 
 /**
- * Implements hook_entity_load().
- */
-function sshkey_entity_load($entities, $entity_type) {
-
-}
-
-/**
  * Implements hook_entity_delete().
  */
 function sshkey_entity_delete($entity, $entity_type) {
@@ -317,17 +310,16 @@ function sshkey_save($key) {
     }
 
     // Allow other modules to alter the public key before saving.
-    drupal_alter('sshkey', $key);
+    module_invoke_all('sshkey_presave', $key);
 
-    // Save the key to the database.
-    drupal_write_record('sshkey', $key, $key->is_new ? array() : array('key_id'));
-
-    // Invoke post-save hooks.
+    // Save the key to the database and invoke the post-save hooks.
     if ($key->is_new) {
+      drupal_write_record('sshkey', $key);
       module_invoke_all('sshkey_insert', $key);
       module_invoke_all('entity_insert', $key, 'sshkey');
     }
     else {
+      drupal_write_record('sshkey', $key, array('key_id'));
       module_invoke_all('sshkey_update', $key);
       module_invoke_all('entity_update', $key, 'sshkey');
     }
@@ -348,8 +340,6 @@ function sshkey_save($key) {
     watchdog_exception('sshkey', $e);
     throw $e;
   }
-
-  return $key;
 }
 
 /**
