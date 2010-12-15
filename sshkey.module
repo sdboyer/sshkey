@@ -229,7 +229,7 @@ function sshkey_load_by_fingerprint($fingerprint) {
  */
 function sshkey_load_all_by_entity($entity_type, $entity_id) {
   $key_ids = sshkey_db_fetch_col(db_query("SELECT key_id FROM {sshkey} WHERE entity_type = '%s' AND entity_id = %d", $entity_type, $entity_id));
-  return  sshkey_load_multiple($key_ids);
+  return sshkey_load_multiple($key_ids);
 }
 
 /**
@@ -263,7 +263,7 @@ function sshkey_load_multiple($key_ids = array(), $reset = FALSE) {
 /**
  * Save a SSH public key.
  */
-function sshkey_save($key) {
+function sshkey_save(&$key) {
   try {
     if (!empty($key->key_id) && !isset($key->original)) {
       $key->original = db_fetch_object(db_query("SELECT * FROM {sshkey} WHERE key_id = %d", $key->key_id));
@@ -295,16 +295,18 @@ function sshkey_save($key) {
     }
 
     // Allow other modules to alter the public key before saving.
-    drupal_alter('sshkey', $key);
+    foreach (module_implements('sshkey_presave') as $module) {
+      $function = $module . '_presave';
+      $function($key);
+    }
 
-    // Save the key to the database.
-    drupal_write_record('sshkey', $key, $key->is_new ? array() : array('key_id'));
-
-    // Invoke post-save hooks.
+    // Save the key to the database and invoke the post-save hooks.
     if ($key->is_new) {
+      drupal_write_record('sshkey', $key);
       module_invoke_all('sshkey_insert', $key);
     }
     else {
+      drupal_write_record('sshkey', $key, array('key_id'));
       module_invoke_all('sshkey_update', $key);
     }
 
@@ -319,8 +321,6 @@ function sshkey_save($key) {
     watchdog_exception('sshkey', $e);
     throw $e;
   }
-
-  return $key;
 }
 
 /**
