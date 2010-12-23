@@ -127,7 +127,7 @@ function sshkey_menu() {
     'modal' => TRUE,
   );
 
-  $items['admin/config/people/ssh-keys'] = array(
+  $items['admin/config/system/ssh-keys'] = array(
     'title' => 'SSH public key settings',
     'description' => 'Configure the SSH public key settings for user accounts.',
     'page callback' => 'drupal_get_form',
@@ -291,7 +291,7 @@ function sshkey_save($key) {
 
   try {
     if (!empty($key->key_id) && !isset($key->original)) {
-      $key->original = entity_load_unchanged('ssh_key', $key->key_id);
+      $key->original = entity_load_unchanged('sshkey', $key->key_id);
     }
 
     // Determine if we will be inserting a new node.
