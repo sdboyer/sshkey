@@ -161,7 +161,7 @@ function sshkey_edit_form_validate($form, &$form_state) {
 function sshkey_edit_form_submit($form, &$form_state) {
   $key = (object) $form_state['values'];
   sshkey_save($key);
-  drupal_set_message(t('The SSH public key %title has been saved.', array('%title' => $form_state['values']['title'])));
+  drupal_set_message(t('The SSH public key %title has been saved.', array('%title' => $key->title)));
 }
 
 function sshkey_delete_form($form_state, $key) {

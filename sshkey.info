@@ -2,3 +2,4 @@ name = "SSH public keys"
 description = "Allows users to associated public keys with their user accounts."
 core = 6.x
 php = 5.x
+files[] = sshkey.test
