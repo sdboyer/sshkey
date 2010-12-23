@@ -403,7 +403,8 @@ function sshkey_validate($key, $form, &$form_state) {
 function sshkey_parse($key_raw) {
   $parsed['raw'] = trim(preg_replace('/\s+/', ' ', $key_raw));
 
-  // The SSH key should be in the form
+  // The SSH key should be a string in the form:
+  // "<algorithm type> <base64-encoded key> <comment>"
   $key_parts = explode(' ', $parsed['raw'], 3);
   if (count($key_parts) < 2) {
     throw new SSHKeyParseException(t('The key is invalid.'));
