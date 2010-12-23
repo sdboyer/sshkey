@@ -129,7 +129,7 @@ function sshkey_menu() {
 
   $items['admin/config/system/ssh-keys'] = array(
     'title' => 'SSH public key settings',
-    'description' => 'Configure the SSH public key settings for user accounts.',
+    'description' => 'Configure the SSH public key settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('sshkey_settings_form'),
     'access arguments' => array('administer SSH public keys'),
