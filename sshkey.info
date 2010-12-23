@@ -1,10 +1,7 @@
 name = "SSH public keys"
 description = "Allows users to associated public keys with their user accounts."
 core = 7.x
-files[] = sshkey.module
-files[] = sshkey.admin.inc
-files[] = sshkey.pages.inc
-files[] = sshkey.install
+files[] = sshkey.test
 files[] = views/sshkey.views.inc
 files[] = views/sshkey_handler_field_sshkey_operations.inc
 files[] = views/sshkey_handler_field_sshkey_link.inc

@@ -147,8 +147,9 @@ function sshkey_edit_form($form, $form_state, $entity_type, $entity_id, $key = N
     '#value' => t('Save'),
   );
   $form['actions']['cancel'] = array(
-    '#type' => 'markup',
-    '#value' => l(t('Cancel'), isset($_GET['destination']) ? $_GET['destination'] : '<front>'),
+    '#type' => 'link',
+    '#title' => t('Cancel'),
+    '#href' => isset($_GET['destination']) ? $_GET['destination'] : '<front>',
   );
 
   return $form;
@@ -174,7 +175,7 @@ function sshkey_edit_form_submit($form, &$form_state) {
   form_state_values_clean($form_state);
   $key = (object) $form_state['values'];
   sshkey_save($key);
-  drupal_set_message(t('The SSH public key %title has been saved.', array('%title' => $form_state['values']['title'])));
+  drupal_set_message(t('The SSH public key %title has been saved.', array('%title' => $key->title)));
 }
 
 function sshkey_delete_form($form, $form_state, $key) {

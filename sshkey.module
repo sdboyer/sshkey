@@ -87,7 +87,7 @@ function sshkey_permission() {
  */
 function sshkey_menu() {
   $items['user/%/ssh-keys'] = array(
-    'title' => 'SSH Keys',
+    'title' => 'SSH keys',
     'page callback' => 'sshkey_list_page',
     'page arguments' => array('user', 1),
     'access callback' => 'sshkey_access',
@@ -317,6 +317,9 @@ function sshkey_save($key) {
       if (empty($key->title)) {
         $key->title = truncate_utf8($parsed['comment'], 128, TRUE);
       }
+    }
+    if (empty($key->title)) {
+      $key->title = truncate_utf8($key->value, 26, FALSE);
     }
 
     // Allow other modules to alter the public key before saving.
